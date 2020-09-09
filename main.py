@@ -1,15 +1,15 @@
 import json
-from datetime import datetime
-# from pprint import pprint
-from urllib.parse import urlencode
 import requests
-from yaupload import upload_photos
-from yaupload import make_folder
+from urllib.parse import urlencode
+from datetime import datetime
+from yaupload import Yandex
+# from pprint import pprint
 
 
 class User:
-    def __init__(self, vk_id):
+    def __init__(self, vk_id, token):
         self.id = vk_id
+        self.token = token
         self.photo_list = []
 
     def get_profile_photos(self, album_id="profile"):
@@ -22,7 +22,7 @@ class User:
             "extended": 1,
             "photo_sizes": 1,
             "count": 5,
-            "access_token": "TOKEN",
+            "access_token": self.token,
             "v": 5.122
         }
         url_requests = "?".join((url, urlencode(parameters)))
@@ -50,11 +50,12 @@ class User:
         parameters = {
             "owner_id": self.id,
             "count": 10,
-            "access_token": "TOKEN",
+            "access_token": self.token,
             "v": 5.122
         }
         url_requests = "?".join((url, urlencode(parameters)))
         response = requests.get(url_requests)
+
         try:
             print(response.json()["response"]["items"])
             for album in response.json()["response"]["items"]:
@@ -64,21 +65,25 @@ class User:
             print('Альбомы пользователя заблокированы')
             return albums_photos_info_list
 
+
 def user_initial():
     vk_id = int(input("Введите vk id - "))
     ya_path = input("Введите название папки для сохнаниения в яндекс диск - ")
+    VK_TOKEN = input("Введите Ваш TOKEN Вконтакте - ")
+    Ya_disk_TOKEN = input("Введите Ваш TOKEN Я.Диск - ")
     # vk_id = 14154609 552934290
     # ya_path = 'ульянов1'
-    u = User(vk_id)
-    make_folder(ya_path)
+    u = User(vk_id, VK_TOKEN)
+    y = Yandex(Ya_disk_TOKEN)
+    y.make_folder(ya_path)
     print('Выберите альбом для загрузки фото...')
     for index, album in enumerate(u.get_albums_list()):
         print(f'{index} - {album["title"]}')
     try:
         index = int(input('...или введите любую букву для загрузки фото профиля\n'))
-        upload_photos(ya_path, u.get_profile_photos(u.get_albums_list()[index]["album_id"]))
+        y.upload_photos(ya_path, u.get_profile_photos(u.get_albums_list()[index]["album_id"]))
     except ValueError:
-        upload_photos(ya_path, u.get_profile_photos())
+        y.upload_photos(ya_path, u.get_profile_photos())
 
 
 user_initial()
