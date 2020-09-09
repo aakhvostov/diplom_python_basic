@@ -67,6 +67,7 @@ class User:
 
 
 def user_initial():
+    global index
     vk_id = int(input("Введите vk id - "))
     ya_path = input("Введите название папки для сохнаниения в яндекс диск - ")
     VK_TOKEN = input("Введите Ваш TOKEN Вконтакте - ")
@@ -84,6 +85,14 @@ def user_initial():
         y.upload_photos(ya_path, u.get_profile_photos(u.get_albums_list()[index]["album_id"]))
     except ValueError:
         y.upload_photos(ya_path, u.get_profile_photos())
+    except IndexError:
+        try:
+            index = int(input(f'Вы ввели цифру - {index}\nВведите любую БУКВУ, для закачки фотографий из профиля\n'))
+            y.upload_photos(ya_path, u.get_profile_photos(u.get_albums_list()[index]["album_id"]))
+        except ValueError:
+            y.upload_photos(ya_path, u.get_profile_photos())
+        except IndexError:
+            print(f'Вы СНОВА ввели цифру - {index}\nПохоже кто-то не умеет читать\nДо свидания!')
 
 
 user_initial()
