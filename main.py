@@ -3,7 +3,6 @@ import requests
 from urllib.parse import urlencode
 from datetime import datetime
 from yaupload import Yandex
-# from pprint import pprint
 
 
 class User:
@@ -57,12 +56,11 @@ class User:
         response = requests.get(url_requests)
 
         try:
-            print(response.json()["response"]["items"])
             for album in response.json()["response"]["items"]:
                 albums_photos_info_list.append({"album_id": album["id"], "title": album["title"]})
             return albums_photos_info_list
         except KeyError:
-            print('Альбомы пользователя заблокированы')
+            print('Альбомы пользователя заблокированы\nБудут загружены фотографии из профиля')
             return albums_photos_info_list
 
 
@@ -72,27 +70,28 @@ def user_initial():
     ya_path = input("Введите название папки для сохнаниения в яндекс диск - ")
     VK_TOKEN = input("Введите Ваш TOKEN Вконтакте - ")
     Ya_disk_TOKEN = input("Введите Ваш TOKEN Я.Диск - ")
-    # vk_id = 14154609 552934290
-    # ya_path = 'ульянов1'
     u = User(vk_id, VK_TOKEN)
     y = Yandex(Ya_disk_TOKEN)
     y.make_folder(ya_path)
-    print('Выберите альбом для загрузки фото...')
-    for index, album in enumerate(u.get_albums_list()):
-        print(f'{index} - {album["title"]}')
-    try:
-        index = int(input('...или введите любую букву для загрузки фото профиля\n'))
-        y.upload_photos(ya_path, u.get_profile_photos(u.get_albums_list()[index]["album_id"]))
-    except ValueError:
+    if not u.get_albums_list():
         y.upload_photos(ya_path, u.get_profile_photos())
-    except IndexError:
+    else:
+        print('Выберите альбом для загрузки фото')
+        for index, album in enumerate(u.get_albums_list()):
+            print(f'{index} - {album["title"]}')
         try:
-            index = int(input(f'Вы ввели цифру - {index}\nВведите любую БУКВУ, для закачки фотографий из профиля\n'))
+            index = int(input('Введите номер альбома - '))
             y.upload_photos(ya_path, u.get_profile_photos(u.get_albums_list()[index]["album_id"]))
-        except ValueError:
-            y.upload_photos(ya_path, u.get_profile_photos())
-        except IndexError:
-            print(f'Вы СНОВА ввели цифру - {index}\nПохоже кто-то не умеет читать\nДо свидания!')
+        except ValueError or IndexError:
+            print('Вы ввели несуществующий номер альбома, или букву. Попробуйте еще раз')
+            print('Выберите альбом для загрузки фото')
+            for index, album in enumerate(u.get_albums_list()):
+                print(f'{index} - {album["title"]}')
+            try:
+                index = int(input('Введите номер альбома - '))
+                y.upload_photos(ya_path, u.get_profile_photos(u.get_albums_list()[index]["album_id"]))
+            except ValueError or IndexError:
+                print('Вы снова ввели неверные данные. До свидания!')
 
 
 user_initial()
